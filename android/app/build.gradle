@@ -11,8 +11,8 @@ android {
         // bump any one part without colliding with the next release's code.
         // Keep both in step with package.json's "version" and app.js's
         // APP_VERSION by hand; there's no build step to derive this from.
-        versionCode 10100
-        versionName "1.1.0"
+        versionCode 10200
+        versionName "1.2.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

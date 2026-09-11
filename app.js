@@ -11,7 +11,7 @@
   // build step here to inject it automatically, and a packaged Android app
   // has no package.json to read at runtime, so this is the one place it has
   // to be kept in sync by hand.
-  const APP_VERSION = "1.1.0";
+  const APP_VERSION = "1.2.0";
 
   // Sideloaded Android apps can't silently self-update the way the desktop
   // Electron build does (electron-updater) — Android requires the user to
@@ -50,6 +50,7 @@
   const fileInput = document.getElementById("fileInput");
   const fileLabel = document.getElementById("fileLabel");
   const memSelect = document.getElementById("memSelect");
+  const networkToggle = document.getElementById("networkToggle");
   const statusEl = document.getElementById("status");
   const emuStatus = document.getElementById("emuStatus");
   const resetBtn = document.getElementById("resetBtn");
@@ -79,6 +80,17 @@
     return isIso ? { cdrom: { buffer: file } } : { hda: { buffer: file } };
   }
 
+  function networkConfig() {
+    // No relay_url at all means v86 never creates a network card in the
+    // first place — this is the "off" state, not a disabled-but-present
+    // device. relay.widgetry.org is a public relay the v86 project's own
+    // community runs for exactly this purpose (confirmed from their live
+    // demo's own default); it's real third-party infrastructure the
+    // network toggle's own label discloses, not something private of ours.
+    if (!networkToggle.checked) return {};
+    return { net_device: { relay_url: "wss://relay.widgetry.org/", type: "ne2k" } };
+  }
+
   function startEmulator(diskConfig, memoryMB) {
     setupScreen.classList.add("hidden");
     emulatorScreen.classList.add("active");
@@ -92,6 +104,7 @@
       vga_memory_size: 8 * 1024 * 1024,
       screen_container: screenContainer,
       autostart: true,
+      ...networkConfig(),
       ...diskConfig,
     });
 

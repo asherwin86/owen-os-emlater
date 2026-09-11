@@ -149,6 +149,19 @@
     <p class="sub">Everything runs locally in your browser — nothing is uploaded anywhere.</p>
 
     <div class="optionRow">
+      <h3>Network</h3>
+      <p>Off by default. When on, the guest gets a real network card and can
+        reach the internet — but only by routing its traffic through
+        <code>relay.widgetry.org</code>, a public relay run by the v86
+        project's community, not by us or Anthropic. Fine for poking around
+        inside the guest; don't rely on it for anything sensitive.</p>
+      <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;">
+        <input id="networkToggle" type="checkbox" style="width:auto; margin:0;" />
+        Enable networking
+      </label>
+    </div>
+
+    <div class="optionRow">
       <h3>Demo Linux</h3>
       <p>A small bundled Linux — boots in a few seconds, no download needed.</p>
       <button id="bootDemoBtn" type="button">Boot Demo Linux</button>
