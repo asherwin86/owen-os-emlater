@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OS Emulator</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #0b0c10;
+    color: #f2f2f5;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #26283a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  header h1 { font-size: 1.05rem; margin: 0; }
+  header p { margin: 2px 0 0; color: #9a9ba5; font-size: 0.8rem; }
+
+  #setupScreen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  #setupScreen.hidden { display: none; }
+  .setupCard {
+    max-width: 460px;
+    width: 100%;
+    background: #16171e;
+    border: 1px solid #26283a;
+    border-radius: 16px;
+    padding: 26px;
+  }
+  .setupCard h2 { margin: 0 0 4px; font-size: 1.15rem; }
+  .setupCard .sub { color: #9a9ba5; font-size: 0.85rem; margin: 0 0 20px; }
+
+  .optionRow {
+    border: 1px solid #26283a;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .optionRow h3 { margin: 0 0 6px; font-size: 0.95rem; }
+  .optionRow p { margin: 0 0 12px; color: #9a9ba5; font-size: 0.8rem; }
+
+  button {
+    font: inherit;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: none;
+    background: #4f8cff;
+    color: white;
+    cursor: pointer;
+  }
+  button:hover { filter: brightness(1.1); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: #26283a; color: #f2f2f5; }
+
+  select {
+    font: inherit;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid #333644;
+    background: #0b0c10;
+    color: #f2f2f5;
+  }
+
+  input[type="file"] {
+    display: block;
+    width: 100%;
+    font: inherit;
+    color: #c8c9d4;
+    margin-bottom: 12px;
+  }
+
+  #fileLabel { font-size: 0.78rem; color: #9a9ba5; margin-top: 4px; min-height: 1.2em; }
+
+  #status { color: #9a9ba5; font-size: 0.82rem; min-height: 1.3em; margin-top: 14px; }
+  #status.error { color: #ff6b6b; }
+  #status.ok { color: #6bd97a; }
+
+  #emulatorScreen { display: none; flex: 1; flex-direction: column; }
+  #emulatorScreen.active { display: flex; }
+  #toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #16171e;
+    border-bottom: 1px solid #26283a;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+  }
+  #toolbar .grow { flex: 1; color: #9a9ba5; }
+  #toolbar button { padding: 6px 14px; font-size: 0.78rem; }
+
+  #screenOuter {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    overflow: auto;
+  }
+  /* v86 measures mouse position against #screen_container's own bounding
+     box, not the canvas it puts inside it — so this element must hug the
+     canvas exactly (shrink-to-fit, no centering space of its own) or every
+     click/move is off by however much empty space surrounded it. Centering
+     happens one level up, on #screenOuter, instead. */
+  #screen_container { display: inline-block; line-height: 0; }
+  #screen_container canvas, #screen_container div.term { image-rendering: pixelated; display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🖥️ OS Emulator</h1>
+    <p>A full x86 PC, emulated in WebAssembly, running entirely in this browser tab.</p>
+  </div>
+</header>
+
+<div id="setupScreen">
+  <div class="setupCard">
+    <h2>Boot something</h2>
+    <p class="sub">Everything runs locally in your browser — nothing is uploaded anywhere.</p>
+
+    <div class="optionRow">
+      <h3>Demo Linux</h3>
+      <p>A small bundled Linux — boots in a few seconds, no download needed.</p>
+      <button id="bootDemoBtn" type="button">Boot Demo Linux</button>
+    </div>
+
+    <div class="optionRow">
+      <h3>Your own ISO / IMG</h3>
+      <p>Pick a disk image from your computer. Small Linux distros work best;
+        very old Windows (98/2000-era) can work but is slow and unreliable.
+        Modern Windows isn't realistic to run this way.</p>
+      <input id="fileInput" type="file" accept=".iso,.img" />
+      <div id="fileLabel"></div>
+      <label style="display:block; font-size:0.78rem; color:#9a9ba5; margin:8px 0 4px;">Memory</label>
+      <select id="memSelect">
+        <option value="128">128 MB (fastest, tiny distros)</option>
+        <option value="256" selected>256 MB</option>
+        <option value="512">512 MB</option>
+        <option value="1024">1 GB (old Windows)</option>
+      </select>
+      <div style="margin-top:14px;">
+        <button id="bootFileBtn" type="button" disabled>Boot This Image</button>
+      </div>
+    </div>
+
+    <p id="status"></p>
+  </div>
+</div>
+
+<div id="emulatorScreen">
+  <div id="toolbar">
+    <span class="grow" id="emuStatus">Starting…</span>
+    <button id="resetBtn" type="button" class="secondary">Reset</button>
+    <button id="fullscreenBtn" type="button" class="secondary">⛶ Fullscreen</button>
+    <button id="powerBtn" type="button" class="secondary">Power Off</button>
+  </div>
+  <div id="screenOuter">
+    <div id="screen_container"></div>
+  </div>
+</div>
+
+<script src="vendor/libv86.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

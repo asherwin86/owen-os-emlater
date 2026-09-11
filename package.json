@@ -1,0 +1,9 @@
+{
+  "name": "os-emulator",
+  "version": "1.0.0",
+  "description": "Browser-based x86 PC emulator (v86/WebAssembly) — boots a bundled demo Linux instantly, or any ISO/IMG file you provide, entirely client-side.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
