@@ -28,12 +28,28 @@ cloned.
   QEMU with KVM) or the [remote-desktop](../remote-desktop) project's actual
   screen-sharing approach against a real machine, not an emulator.
 
-## Running it
+## Getting it
+
+Three ways to run this, all sharing the same `index.html`/`app.js`:
+
+- **Prebuilt apps** (easiest): grab the latest release —
+  [Windows installer or portable exe](https://github.com/asherwin86/owen-os-emlater/releases/latest)
+  and an Android APK, both on the same release. The desktop app checks that
+  page for updates on every launch and installs them automatically
+  (`electron-updater`); the Android app can't do that silently (sideloading
+  always needs a tap-through install prompt), so it shows a banner instead
+  when a newer release exists.
+- **In a browser, from source** — see below.
+- **Build the apps yourself** — see "Building the desktop app" and "Building
+  the Android app" further down.
+
+## Running it from source
 
 ```
 npm start
 ```
-then open <http://localhost:6060>. Two ways to boot:
+then open <http://localhost:6060>, or `npm run electron:start` for the
+desktop-app version of the same thing. Two ways to boot:
 
 1. **Boot Demo Linux** — instant, no file needed.
 2. **Your own ISO / IMG** — pick a file, choose how much RAM to give it, hit
@@ -59,3 +75,40 @@ curl -sL -o vendor/vgabios.bin https://copy.sh/v86/bios/vgabios.bin
 The exported global is `V86` (constructor), not the older `V86Starter` name
 some tutorials still reference — confirmed by reading the actual downloaded
 source, not assumed.
+
+## Building the desktop app
+
+```
+npm install
+USE_SYSTEM_WINE=true npx electron-builder --win nsis portable --publish always
+gh release edit v<version> --draft=false --latest
+```
+(`USE_SYSTEM_WINE` only matters when cross-building for Windows from
+Linux/WSL — see the mini_games CLAUDE.md for why. `--publish always` is
+required, not optional: a hand-made release skips `latest.yml`, and without
+it `electron-updater` can never detect a new version.)
+
+## Building the Android app
+
+Needs a JDK 21+ and the Android SDK (`ANDROID_HOME`/`ANDROID_SDK_ROOT`) —
+neither is bundled in this repo.
+```
+npm run android:sync        # copies index.html/app.js/vendor/images into
+                             # www/, then `cap sync` into android/
+cd android
+ANDROID_KEYSTORE_PATH=/path/to/release.keystore \
+ANDROID_KEYSTORE_PASSWORD=... ANDROID_KEY_ALIAS=os-emulator ANDROID_KEY_PASSWORD=... \
+./gradlew assembleRelease
+```
+Without those four env vars set, `assembleRelease` still builds, just
+unsigned — fine for local testing, not for anything meant to be installed.
+**The signing keystore must stay identical across every release** — Android
+refuses to install an "update" signed by a different key than whatever's
+already on the device, so losing it silently breaks updates for anyone who
+installed an earlier build (they'd have to uninstall the old one first).
+Keep both the version bump (`package.json`, `android/app/build.gradle`'s
+`versionCode`/`versionName`, and `app.js`'s `APP_VERSION`) and the upload to
+the same GitHub release the desktop build publishes to:
+```
+gh release upload v<version> app-release.apk --clobber
+```
