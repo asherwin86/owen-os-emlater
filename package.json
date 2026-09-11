@@ -1,9 +1,39 @@
 {
   "name": "os-emulator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Browser-based x86 PC emulator (v86/WebAssembly) — boots a bundled demo Linux instantly, or any ISO/IMG file you provide, entirely client-side.",
-  "main": "server.js",
+  "main": "electron/main.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "electron:start": "electron .",
+    "dist": "electron-builder --win nsis portable",
+    "publish": "electron-builder --win nsis portable --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.mimigames.osemulator",
+    "productName": "OS Emulator",
+    "files": ["electron/**/*", "server.js", "index.html", "app.js", "vendor/**/*", "images/**/*"],
+    "npmRebuild": false,
+    "publish": {
+      "provider": "github",
+      "owner": "asherwin86",
+      "repo": "owen-os-emlater"
+    },
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "nsis": {
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}.${ext}"
+    }
   }
 }

@@ -61,6 +61,18 @@ const server = http.createServer((req, res) => {
   serveFile(req, res, filePath);
 });
 
-server.listen(PORT, () => {
-  console.log(`OS Emulator running at http://localhost:${PORT}`);
-});
+function start(port) {
+  return new Promise((resolve) => {
+    server.listen(port || PORT, () => {
+      console.log(`OS Emulator running at http://localhost:${port || PORT}`);
+      resolve(server);
+    });
+  });
+}
+
+// Runs standalone (`node server.js` / `npm start`) exactly as before; the
+// Electron wrapper instead requires this file and calls start() itself, so
+// the same server backs both the plain-browser and packaged-app versions.
+if (require.main === module) start();
+
+module.exports = { start };
