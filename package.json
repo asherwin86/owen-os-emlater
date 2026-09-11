@@ -7,9 +7,13 @@
     "start": "node server.js",
     "electron:start": "electron .",
     "dist": "electron-builder --win nsis portable",
-    "publish": "electron-builder --win nsis portable --publish always"
+    "publish": "electron-builder --win nsis portable --publish always",
+    "android:sync": "node scripts/prepare-www.js && npx cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
     "electron-updater": "^6.3.9"
   },
   "devDependencies": {
@@ -19,7 +23,14 @@
   "build": {
     "appId": "com.mimigames.osemulator",
     "productName": "OS Emulator",
-    "files": ["electron/**/*", "server.js", "index.html", "app.js", "vendor/**/*", "images/**/*"],
+    "files": [
+      "electron/**/*",
+      "server.js",
+      "index.html",
+      "app.js",
+      "vendor/**/*",
+      "images/**/*"
+    ],
     "npmRebuild": false,
     "publish": {
       "provider": "github",
@@ -27,7 +38,10 @@
       "repo": "owen-os-emlater"
     },
     "win": {
-      "target": ["nsis", "portable"]
+      "target": [
+        "nsis",
+        "portable"
+      ]
     },
     "nsis": {
       "artifactName": "${productName}-Setup-${version}.${ext}"

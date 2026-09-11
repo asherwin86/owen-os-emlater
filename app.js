@@ -7,6 +7,42 @@
 (function () {
   "use strict";
 
+  // Bump alongside package.json's "version" on every release — there's no
+  // build step here to inject it automatically, and a packaged Android app
+  // has no package.json to read at runtime, so this is the one place it has
+  // to be kept in sync by hand.
+  const APP_VERSION = "1.1.0";
+
+  // Sideloaded Android apps can't silently self-update the way the desktop
+  // Electron build does (electron-updater) — Android requires the user to
+  // tap through an install prompt no matter what. This is the realistic
+  // ceiling: notice a newer GitHub release exists and hand over a direct
+  // download link. window.Capacitor only exists when running inside the
+  // native Android app (Capacitor injects its bridge at runtime) — never in
+  // a plain browser tab or the Electron build, so this naturally only ever
+  // fires there.
+  async function checkForAndroidUpdate() {
+    if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return;
+    try {
+      const res = await fetch("https://api.github.com/repos/asherwin86/owen-os-emlater/releases/latest");
+      if (!res.ok) return;
+      const data = await res.json();
+      const latestVersion = (data.tag_name || "").replace(/^v/, "");
+      if (!latestVersion || latestVersion === APP_VERSION) return;
+      const apkAsset = (data.assets || []).find((a) => a.name.endsWith(".apk"));
+      if (!apkAsset) return;
+
+      const bar = document.createElement("div");
+      bar.id = "updateBanner";
+      bar.innerHTML = `Update ${latestVersion} available — <a href="${apkAsset.browser_download_url}" target="_blank" rel="noopener">tap to download</a>`;
+      document.body.prepend(bar);
+    } catch (e) {
+      // Offline, rate-limited, or GitHub unreachable — this is a courtesy
+      // check, not something worth surfacing as an error.
+    }
+  }
+  checkForAndroidUpdate();
+
   const setupScreen = document.getElementById("setupScreen");
   const emulatorScreen = document.getElementById("emulatorScreen");
   const bootDemoBtn = document.getElementById("bootDemoBtn");
