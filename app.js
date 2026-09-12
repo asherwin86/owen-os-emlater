@@ -11,7 +11,7 @@
   // build step here to inject it automatically, and a packaged Android app
   // has no package.json to read at runtime, so this is the one place it has
   // to be kept in sync by hand.
-  const APP_VERSION = "1.2.0";
+  const APP_VERSION = "1.2.1";
 
   // Sideloaded Android apps can't silently self-update the way the desktop
   // Electron build does (electron-updater) — Android requires the user to
@@ -57,6 +57,7 @@
   const fullscreenBtn = document.getElementById("fullscreenBtn");
   const powerBtn = document.getElementById("powerBtn");
   const screenContainer = document.getElementById("screen_container");
+  const exitFullscreenOverlay = document.getElementById("exitFullscreenOverlay");
 
   let emulator = null;
 
@@ -133,9 +134,26 @@
 
   resetBtn.addEventListener("click", () => { if (emulator) emulator.restart(); });
 
-  fullscreenBtn.addEventListener("click", () => {
-    if (emulator) emulator.screen_go_fullscreen();
+  // Deliberately not using v86's own screen_go_fullscreen() — it also calls
+  // navigator.keyboard.lock(), which in browsers that support it suppresses
+  // the normal "Escape exits fullscreen" gesture. Plain requestFullscreen()
+  // keeps that gesture working, and the exit button below (a child of the
+  // fullscreened element, unlike the toolbar) gives a second way out that
+  // doesn't rely on the user knowing to press Escape at all.
+  function isFullscreen() {
+    return document.fullscreenElement === screenContainer;
+  }
+  function toggleFullscreen() {
+    if (isFullscreen()) document.exitFullscreen();
+    else if (screenContainer.requestFullscreen) screenContainer.requestFullscreen().catch(() => {});
+  }
+  document.addEventListener("fullscreenchange", () => {
+    const active = isFullscreen();
+    fullscreenBtn.textContent = active ? "⤢ Exit Fullscreen" : "⛶ Fullscreen";
+    exitFullscreenOverlay.hidden = !active;
   });
+  fullscreenBtn.addEventListener("click", toggleFullscreen);
+  exitFullscreenOverlay.addEventListener("click", () => document.exitFullscreen());
 
   powerBtn.addEventListener("click", async () => {
     if (!emulator) return;

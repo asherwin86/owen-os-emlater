@@ -130,8 +130,28 @@
      canvas exactly (shrink-to-fit, no centering space of its own) or every
      click/move is off by however much empty space surrounded it. Centering
      happens one level up, on #screenOuter, instead. */
-  #screen_container { display: inline-block; line-height: 0; }
+  #screen_container { display: inline-block; line-height: 0; position: relative; }
   #screen_container canvas, #screen_container div.term { image-rendering: pixelated; display: block; }
+  #screen_container:fullscreen { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; }
+
+  /* A child of #screen_container, not the toolbar (a sibling) — so this
+     stays visible even in fullscreen, where only the fullscreened element
+     and its descendants render at all. Without this, there was no on-screen
+     way out of fullscreen once the toolbar disappeared. */
+  #exitFullscreenOverlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(0,0,0,0.65);
+    color: #f2f2f5;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    z-index: 10;
+  }
+  #exitFullscreenOverlay:hover { background: rgba(0,0,0,0.85); }
 </style>
 </head>
 <body>
@@ -198,7 +218,9 @@
     <button id="powerBtn" type="button" class="secondary">Power Off</button>
   </div>
   <div id="screenOuter">
-    <div id="screen_container"></div>
+    <div id="screen_container">
+      <button id="exitFullscreenOverlay" type="button" hidden>⤢ Exit Fullscreen</button>
+    </div>
   </div>
 </div>
 
