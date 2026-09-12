@@ -11,7 +11,7 @@
   // build step here to inject it automatically, and a packaged Android app
   // has no package.json to read at runtime, so this is the one place it has
   // to be kept in sync by hand.
-  const APP_VERSION = "1.2.1";
+  const APP_VERSION = "1.2.2";
 
   // Sideloaded Android apps can't silently self-update the way the desktop
   // Electron build does (electron-updater) — Android requires the user to
